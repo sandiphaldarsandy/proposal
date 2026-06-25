@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Question Worth Asking</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#1a0a0f;color:#f0e8e0;font-family:'Jost',sans-serif;font-weight:300;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 50% at 20% 20%,rgba(140,50,70,.25) 0%,transparent 70%),radial-gradient(ellipse 50% 60% at 80% 80%,rgba(100,30,50,.2) 0%,transparent 70%);pointer-events:none;z-index:0;}
+.screen{display:none;position:relative;z-index:1;min-height:100vh;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;}
+.screen.active{display:flex;}
+.ornament{font-size:18px;color:#c8776a;margin-bottom:32px;letter-spacing:8px;text-align:center;opacity:.7;}
+.display{font-family:'Cormorant Garamond',serif;font-size:clamp(32px,7vw,54px);font-weight:300;line-height:1.15;text-align:center;color:#f0e8e0;margin-bottom:12px;}
+.display em{font-style:italic;color:#e8a898;}
+.sub{font-size:10px;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:rgba(240,232,224,.45);text-align:center;margin-bottom:48px;}
+.from-name{font-family:'Cormorant Garamond',serif;font-size:13px;letter-spacing:4px;color:rgba(200,119,106,.7);text-align:center;margin-bottom:12px;text-transform:uppercase;}
+.proposal-btns{display:flex;gap:16px;margin-top:8px;}
+.btn-yes{padding:14px 48px;background:#7a2a35;border:1px solid #c8776a;color:#f0e8e0;font-family:'Jost',sans-serif;font-size:14px;letter-spacing:2px;border-radius:50px;cursor:pointer;transition:all .3s;}
+.btn-yes:hover{background:#9a3a45;}
+.btn-no{padding:14px 48px;background:transparent;border:1px solid rgba(255,200,180,.15);color:rgba(240,232,224,.45);font-family:'Jost',sans-serif;font-size:14px;letter-spacing:2px;border-radius:50px;cursor:pointer;transition:all .3s;}
+.food-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:380px;width:100%;margin-bottom:24px;}
+.food-item{background:rgba(255,255,255,.04);border:1px solid rgba(255,200,180,.15);border-radius:16px;padding:20px 12px;text-align:center;cursor:pointer;transition:all .25s;user-select:none;}
+.food-item.selected{background:rgba(122,42,53,.35);border-color:#c8776a;}
+.food-item .emoji{font-size:28px;display:block;margin-bottom:8px;}
+.food-item .label{font-size:11px;letter-spacing:1px;color:rgba(240,232,224,.45);}
+.food-item.selected .label{color:#e8a898;}
+.food-note{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;color:#e8a898;min-height:20px;text-align:center;margin-bottom:20px;}
+.calendar-wrap{background:rgba(255,255,255,.04);border:1px solid rgba(255,200,180,.15);border-radius:20px;padding:28px;max-width:360px;width:100%;margin-bottom:28px;}
+.cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+.cal-month{font-family:'Cormorant Garamond',serif;font-size:18px;color:#f0e8e0;}
+.cal-nav{background:none;border:none;color:#e8a898;font-size:22px;cursor:pointer;padding:4px 12px;}
+.cal-days-header{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;margin-bottom:8px;}
+.cal-day-name{font-size:10px;letter-spacing:1px;color:rgba(240,232,224,.45);padding:4px 0;}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:13px;border-radius:50%;cursor:pointer;transition:all .2s;color:#f0e8e0;}
+.cal-day.selected{background:#7a2a35;border:1px solid #c8776a;}
+.cal-day.past{color:rgba(240,232,224,.2);cursor:default;}
+.cal-day.empty{cursor:default;}
+.cal-day.today{color:#e8a898;font-weight:500;}
+.time-options{display:flex;flex-direction:column;gap:10px;max-width:360px;width:100%;margin-bottom:28px;}
+.time-item{background:rgba(255,255,255,.04);border:1px solid rgba(255,200,180,.15);border-radius:12px;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:all .25s;}
+.time-item.selected{background:rgba(122,42,53,.35);border-color:#c8776a;}
+.time-label{font-size:14px;color:#f0e8e0;letter-spacing:1px;}
+.time-value{font-size:13px;color:rgba(240,232,224,.45);}
+.time-item.selected .time-value{color:#e8a898;}
+.note-wrap{max-width:360px;width:100%;margin-bottom:28px;}
+.note-wrap textarea{width:100%;min-height:160px;background:rgba(255,255,255,.04);border:1px solid rgba(255,200,180,.2);border-radius:16px;padding:20px;color:#f0e8e0;font-family:'Cormorant Garamond',serif;font-size:16px;font-style:italic;line-height:1.8;resize:none;outline:none;}
+.note-wrap textarea:focus{border-color:rgba(200,119,106,.6);}
+.confirm-card{background:rgba(255,255,255,.04);border:1px solid rgba(220,150,130,.6);border-radius:20px;padding:36px 32px;max-width:360px;width:100%;text-align:center;margin-bottom:28px;}
+.confirm-label{font-size:9px;letter-spacing:4px;color:rgba(240,232,224,.45);text-transform:uppercase;margin-bottom:6px;}
+.confirm-value{font-family:'Cormorant Garamond',serif;font-size:22px;color:#f0e8e0;margin-bottom:20px;font-weight:300;}
+.confirm-divider{width:40px;height:1px;background:rgba(220,150,130,.6);margin:16px auto;}
+.confirm-quote{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;color:#e8a898;line-height:1.7;margin-top:20px;}
+.btn-primary{padding:16px 52px;background:#7a2a35;border:1px solid #c8776a;color:#f0e8e0;font-family:'Jost',sans-serif;font-size:12px;font-weight:500;letter-spacing:3px;text-transform:uppercase;border-radius:50px;cursor:pointer;transition:all .3s;display:flex;align-items:center;gap:10px;}
+.btn-primary:hover{background:#9a3a45;}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+.btn-secondary{background:none;border:none;color:rgba(240,232,224,.45);font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-top:16px;font-family:'Jost',sans-serif;padding:8px;}
+.status-msg{font-size:12px;color:#e8a898;text-align:center;margin-top:12px;min-height:18px;}
+.final-heart{font-size:64px;display:block;text-align:center;margin-bottom:24px;animation:pulse 1.5s ease-in-out infinite;}
+@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.12);}}
+#no-msg{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(26,10,15,.97);border:1px solid rgba(255,200,180,.15);padding:32px 40px;border-radius:20px;text-align:center;display:none;z-index:100;}
+#no-msg p{font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;margin-bottom:16px;color:#f0e8e0;}
+</style>
+</head>
+<body>
+
+<!-- Screen 1 -->
+<div class="screen active" id="screen1">
+  <div class="ornament">♦ · · ♦</div>
+  <p class="from-name">From Sandip</p>
+  <h1 class="display">Will you go on a<br><em>date with me?</em></h1>
+  <p class="sub">A question worth asking</p>
+  <div class="proposal-btns">
+    <button class="btn-yes" id="yesBtn">Yes</button>
+    <button class="btn-no" id="noBtn">No</button>
+  </div>
+</div>
+
+<!-- No message -->
+<div id="no-msg">
+  <p>"No" isn't really an option... 🥺</p>
+  <button class="btn-yes" id="noMsgYesBtn">Okay, fine. Yes ❤️</button>
+</div>
+
+<!-- Screen 2: Food -->
+<div class="screen" id="screen2">
+  <div class="ornament">♦ · · ♦</div>
+  <h2 class="display">What are we<br><em>feeling?</em></h2>
+  <p class="sub">Pick one or more</p>
+  <div class="food-grid">
+    <div class="food-item" data-food="Sushi"><span class="emoji">🍣</span><span class="label">Sushi</span></div>
+    <div class="food-item" data-food="Pasta"><span class="emoji">🍝</span><span class="label">Pasta</span></div>
+    <div class="food-item" data-food="Pizza"><span class="emoji">🍕</span><span class="label">Pizza</span></div>
+    <div class="food-item" data-food="Biryani"><span class="emoji">🍛</span><span class="label">Biryani</span></div>
+    <div class="food-item" data-food="Kababs"><span class="emoji">🍢</span><span class="label">Kababs</span></div>
+    <div class="food-item" data-food="Tacos"><span class="emoji">🌮</span><span class="label">Tacos</span></div>
+    <div class="food-item" data-food="Ramen"><span class="emoji">🍜</span><span class="label">Ramen</span></div>
+    <div class="food-item" data-food="Burgers"><span class="emoji">🍔</span><span class="label">Burgers</span></div>
+    <div class="food-item" data-food="Desserts"><span class="emoji">🍰</span><span class="label">Desserts</span></div>
+  </div>
+  <div class="food-note" id="foodNote">select what you're craving</div>
+  <button class="btn-primary" id="foodNextBtn">Let's go ✦</button>
+</div>
+
+<!-- Screen 3: Calendar -->
+<div class="screen" id="screen3">
+  <div class="ornament">♦ · · ♦</div>
+  <h2 class="display">When are you<br><em>free?</em></h2>
+  <p class="sub">Pick a date</p>
+  <div class="calendar-wrap">
+    <div class="cal-header">
+      <button class="cal-nav" id="prevMonth">‹</button>
+      <span class="cal-month" id="calMonthLabel"></span>
+      <button class="cal-nav" id="nextMonth">›</button>
+    </div>
+    <div class="cal-days-header">
+      <span class="cal-day-name">Su</span><span class="cal-day-name">Mo</span>
+      <span class="cal-day-name">Tu</span><span class="cal-day-name">We</span>
+      <span class="cal-day-name">Th</span><span class="cal-day-name">Fr</span>
+      <span class="cal-day-name">Sa</span>
+    </div>
+    <div class="cal-days" id="calDays"></div>
+  </div>
+  <button class="btn-primary" id="dateNextBtn" disabled>Next ✦</button>
+</div>
+
+<!-- Screen 4: Time -->
+<div class="screen" id="screen4">
+  <div class="ornament">♦ · · ♦</div>
+  <h2 class="display">What<br><em>time?</em></h2>
+  <p class="sub">Choose your hour</p>
+  <div class="time-options">
+    <div class="time-item" data-time="7:00 PM"><span class="time-label">Evening</span><span class="time-value">7:00 PM</span></div>
+    <div class="time-item" data-time="8:30 PM"><span class="time-label">Night</span><span class="time-value">8:30 PM</span></div>
+    <div class="time-item" data-time="10:00 PM"><span class="time-label">Late Night</span><span class="time-value">10:00 PM</span></div>
+  </div>
+  <button class="btn-primary" id="timeNextBtn" disabled>Next ✦</button>
+</div>
+
+<!-- Screen 4.5: Note -->
+<div class="screen" id="screen45">
+  <div class="ornament">♦ · · ♦</div>
+  <h2 class="display">কিছু বলতে<br><em>চাও?</em></h2>
+  <p class="sub">Write something special · optional</p>
+  <div class="note-wrap">
+    <textarea id="specialNote" placeholder="তোমার মনের কথা এখানে লেখো... ✦"></textarea>
+    <p style="color:rgba(240,232,224,.3);font-size:11px;text-align:right;margin-top:8px;">optional — না লিখলেও চলবে</p>
+  </div>
+  <button class="btn-primary" id="noteNextBtn">Next ✦</button>
+</div>
+
+<!-- Screen 5: Confirm -->
+<div class="screen" id="screen5">
+  <div class="ornament">♦ · · ♦</div>
+  <h2 class="display" style="font-size:clamp(24px,5vw,38px);margin-bottom:8px;">It's a date.</h2>
+  <p class="sub" style="margin-bottom:28px;">Something wonderful awaits</p>
+  <div class="confirm-card">
+    <div class="confirm-label">When</div>
+    <div class="confirm-value" id="confirmDate">—</div>
+    <div class="confirm-divider"></div>
+    <div class="confirm-label">What we're having</div>
+    <div class="confirm-value" id="confirmFood">—</div>
+    <div class="confirm-quote">✦ Every great love story has a first evening.<br>This is ours.</div>
+    <div id="confirmNoteWrap" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid rgba(200,119,106,.2);">
+      <div class="confirm-label">তার কথা</div>
+      <div id="confirmNote" style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:15px;color:#e8a898;line-height:1.7;margin-top:6px;"></div>
+    </div>
+  </div>
+  <button class="btn-primary" id="sendBtn">Confirm & Send ✦</button>
+  <div class="status-msg" id="statusMsg"></div>
+  <button class="btn-secondary" id="startOverBtn">Start Over</button>
+</div>
+
+<!-- Screen 6: Final -->
+<div class="screen" id="screen6">
+  <span class="final-heart">💌</span>
+  <h2 class="display" style="margin-bottom:16px;">See you<br><em>very soon.</em></h2>
+  <p style="color:rgba(240,232,224,.45);font-size:13px;letter-spacing:2px;text-align:center;line-height:2;">Confirmation has been sent.<br>Until then — I'll be counting the hours.</p>
+</div>
+
+<script>
+var selectedFoods = [];
+var selectedDate = null;
+var selectedTime = null;
+var currentMonth, currentYear;
+var today = new Date();
+currentMonth = today.getMonth();
+currentYear = today.getFullYear();
+
+function showScreen(id) {
+  var screens = document.querySelectorAll('.screen');
+  for (var i = 0; i < screens.length; i++) {
+    screens[i].style.display = 'none';
+    screens[i].classList.remove('active');
+  }
+  var target = document.getElementById(id);
+  target.style.display = 'flex';
+  target.style.flexDirection = 'column';
+  target.style.alignItems = 'center';
+  target.style.justifyContent = 'center';
+  target.classList.add('active');
+  window.scrollTo(0, 0);
+  if (id === 'screen3') renderCalendar();
+}
+
+// Screen 1 buttons
+document.getElementById('yesBtn').addEventListener('click', function() {
+  showScreen('screen2');
+});
+
+document.getElementById('noBtn').addEventListener('click', function() {
+  document.getElementById('no-msg').style.display = 'block';
+});
+
+document.getElementById('noMsgYesBtn').addEventListener('click', function() {
+  document.getElementById('no-msg').style.display = 'none';
+  showScreen('screen2');
+});
+
+// Food
+var foodItems = document.querySelectorAll('.food-item');
+for (var i = 0; i < foodItems.length; i++) {
+  foodItems[i].addEventListener('click', function() {
+    var name = this.getAttribute('data-food');
+    this.classList.toggle('selected');
+    if (this.classList.contains('selected')) {
+      selectedFoods.push(name);
+    } else {
+      selectedFoods = selectedFoods.filter(function(f) { return f !== name; });
+    }
+    var note = document.getElementById('foodNote');
+    if (selectedFoods.length === 0) {
+      note.textContent = "select what you're craving";
+    } else {
+      note.textContent = selectedFoods.join(' + ') + ' — bold choice!';
+    }
+  });
+}
+
+document.getElementById('foodNextBtn').addEventListener('click', function() {
+  if (selectedFoods.length === 0) { alert('Please pick at least one!'); return; }
+  showScreen('screen3');
+});
+
+// Calendar
+function renderCalendar() {
+  var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('calMonthLabel').textContent = months[currentMonth] + ' ' + currentYear;
+  var first = new Date(currentYear, currentMonth, 1).getDay();
+  var daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  var container = document.getElementById('calDays');
+  container.innerHTML = '';
+  for (var i = 0; i < first; i++) {
+    var empty = document.createElement('div');
+    empty.className = 'cal-day empty';
+    container.appendChild(empty);
+  }
+  for (var d = 1; d <= daysInMonth; d++) {
+    var el = document.createElement('div');
+    el.className = 'cal-day';
+    el.textContent = d;
+    var thisDate = new Date(currentYear, currentMonth, d);
+    var todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    if (thisDate.toDateString() === today.toDateString()) el.classList.add('today');
+    if (thisDate < todayDate) {
+      el.classList.add('past');
+    } else {
+      (function(day, elem) {
+        elem.addEventListener('click', function() {
+          var all = document.querySelectorAll('.cal-day');
+          for (var x = 0; x < all.length; x++) all[x].classList.remove('selected');
+          elem.classList.add('selected');
+          var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+          var date = new Date(currentYear, currentMonth, day);
+          selectedDate = { d: day, m: currentMonth, y: currentYear, label: days[date.getDay()] + ', ' + months[currentMonth] + ' ' + day };
+          document.getElementById('dateNextBtn').disabled = false;
+        });
+      })(d, el);
+    }
+    container.appendChild(el);
+  }
+}
+
+document.getElementById('prevMonth').addEventListener('click', function() {
+  currentMonth--;
+  if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+  renderCalendar();
+});
+
+document.getElementById('nextMonth').addEventListener('click', function() {
+  currentMonth++;
+  if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+  renderCalendar();
+});
+
+document.getElementById('dateNextBtn').addEventListener('click', function() {
+  if (!selectedDate) return;
+  showScreen('screen4');
+});
+
+// Time
+var timeItems = document.querySelectorAll('.time-item');
+for (var j = 0; j < timeItems.length; j++) {
+  timeItems[j].addEventListener('click', function() {
+    var all = document.querySelectorAll('.time-item');
+    for (var x = 0; x < all.length; x++) all[x].classList.remove('selected');
+    this.classList.add('selected');
+    selectedTime = this.getAttribute('data-time');
+    document.getElementById('timeNextBtn').disabled = false;
+  });
+}
+
+document.getElementById('timeNextBtn').addEventListener('click', function() {
+  if (!selectedTime) return;
+  showScreen('screen45');
+});
+
+// Note
+document.getElementById('noteNextBtn').addEventListener('click', function() {
+  var note = document.getElementById('specialNote').value.trim();
+  document.getElementById('confirmDate').textContent = selectedDate.label + ' · ' + selectedTime;
+  document.getElementById('confirmFood').textContent = selectedFoods.join(' & ');
+  if (note) {
+    document.getElementById('confirmNoteWrap').style.display = 'block';
+    document.getElementById('confirmNote').textContent = note;
+  }
+  showScreen('screen5');
+});
+
+// Send
+document.getElementById('sendBtn').addEventListener('click', function() {
+  var btn = document.getElementById('sendBtn');
+  var status = document.getElementById('statusMsg');
+  btn.disabled = true;
+  status.textContent = 'Sending...';
+  emailjs.init('s3tDgVEMuxpGUAtnU');
+  var note = document.getElementById('specialNote').value.trim();
+  emailjs.send('service_oof69eo', 'pkxiknd', {
+    to_email: 'abdmnprst@gmail.com',
+    date: selectedDate.label,
+    time: selectedTime,
+    food: selectedFoods.join(' & '),
+    message: note || 'কিছু লেখেনি — কিন্তু Yes বলেছে! 💕'
+  }).then(function() {
+    showScreen('screen6');
+  }, function() {
+    showScreen('screen6');
+  });
+});
+
+document.getElementById('startOverBtn').addEventListener('click', function() {
+  selectedFoods = [];
+  selectedDate = null;
+  selectedTime = null;
+  document.getElementById('specialNote').value = '';
+  document.getElementById('foodNote').textContent = "select what you're craving";
+  var fi = document.querySelectorAll('.food-item');
+  for (var i = 0; i < fi.length; i++) fi[i].classList.remove('selected');
+  var ti = document.querySelectorAll('.time-item');
+  for (var i = 0; i < ti.length; i++) ti[i].classList.remove('selected');
+  document.getElementById('confirmNoteWrap').style.display = 'none';
+  document.getElementById('sendBtn').disabled = false;
+  document.getElementById('statusMsg').textContent = '';
+  currentMonth = today.getMonth();
+  currentYear = today.getFullYear();
+  showScreen('screen1');
+});
+</script>
+</body>
+</html>
